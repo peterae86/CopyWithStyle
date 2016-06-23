@@ -2,37 +2,24 @@ package com.peterae86.export;
 
 import com.google.common.escape.Escaper;
 import com.google.common.html.HtmlEscapers;
-import com.intellij.codeInsight.highlighting.HighlightUsagesHandler;
-import com.intellij.lexer.Lexer;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.editor.*;
 import com.intellij.openapi.editor.actionSystem.EditorAction;
 import com.intellij.openapi.editor.actionSystem.EditorActionHandler;
 import com.intellij.openapi.editor.colors.EditorColorsScheme;
 import com.intellij.openapi.editor.colors.FontPreferences;
-import com.intellij.openapi.editor.ex.DocumentEx;
-import com.intellij.openapi.editor.ex.MarkupModelEx;
-import com.intellij.openapi.editor.ex.RangeHighlighterEx;
-import com.intellij.openapi.editor.highlighter.EditorHighlighter;
 import com.intellij.openapi.editor.highlighter.HighlighterIterator;
 import com.intellij.openapi.editor.impl.DocumentImpl;
 import com.intellij.openapi.editor.impl.EditorFilteringMarkupModelEx;
-import com.intellij.openapi.editor.impl.EditorHighlighterCache;
 import com.intellij.openapi.editor.impl.EditorImpl;
-import com.intellij.openapi.editor.impl.view.EditorView;
 import com.intellij.openapi.editor.markup.*;
 import com.intellij.openapi.util.TextRange;
-import com.intellij.psi.PsiDocumentManager;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.tree.IElementType;
+import com.peterae86.export.style.StyleKey;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.lang.reflect.Field;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -61,12 +48,6 @@ public class ExportToHtmlAction extends EditorAction {
         }
     }
 
-    static enum StyleKey {
-        Color,
-        Size,
-
-    }
-
     public ExportToHtmlAction(boolean setupHandler) {
         super(null);
         this.setupHandler(new EditorActionHandler() {
@@ -78,33 +59,8 @@ public class ExportToHtmlAction extends EditorAction {
                 EditorFilteringMarkupModelEx filteredDocumentMarkupModel = (EditorFilteringMarkupModelEx) editorImpl.getFilteredDocumentMarkupModel();
                 Map<TextRange, Map<StyleKey, String>> styleMap = new HashMap<>();
 
-                Escaper escaper = HtmlEscapers.htmlEscaper();
-                HighlighterIterator iterator = editorImpl.getHighlighter().createIterator(0);
-                while (!iterator.atEnd()) {
-                    TextAttributes textAttributes = iterator.getTextAttributes();
-                    int start = iterator.getStart();
-                    int end = iterator.getEnd();
-                    if (textAttributes.getForegroundColor() != null) {
-                        if (!styleMap.containsKey(new TextRange(start, end))) {
-                            styleMap.put(new TextRange(start, end), new HashMap<>());
-                        }
-                        styleMap.get(new TextRange(start, end)).put(StyleKey.Color, color2String(textAttributes.getForegroundColor()));
-                    }
-                    iterator.advance();
-                }
 
-                RangeHighlighter[] allHighlighters = filteredDocumentMarkupModel.getDelegate().getAllHighlighters();
 
-                for (RangeHighlighter allHighlighter : allHighlighters) {
-                    TextRange textRange = new TextRange(allHighlighter.getStartOffset(), allHighlighter.getEndOffset());
-                    TextAttributes textAttributes = allHighlighter.getTextAttributes();
-                    if (textAttributes != null && textAttributes.getForegroundColor() != null) {
-                        if (!styleMap.containsKey(textRange)) {
-                            styleMap.put(textRange, new HashMap<>());
-                        }
-                        styleMap.get(textRange).put(StyleKey.Color, color2String(textAttributes.getForegroundColor()));
-                    }
-                }
 
 
                 StringBuilder sb = new StringBuilder();
@@ -154,13 +110,5 @@ public class ExportToHtmlAction extends EditorAction {
     }
 
 
-    public static String color2String(Color color) {
-        String R = Integer.toHexString(color.getRed());
-        R = R.length() < 2 ? ('0' + R) : R;
-        String B = Integer.toHexString(color.getBlue());
-        B = B.length() < 2 ? ('0' + B) : B;
-        String G = Integer.toHexString(color.getGreen());
-        G = G.length() < 2 ? ('0' + G) : G;
-        return '#' + R + G + B;
-    }
+
 }

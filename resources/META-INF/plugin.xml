@@ -35,17 +35,20 @@
         <!--</action>-->
 
 
-        <group id="MyExportGroup" text="copyStyle" popup="true">
+        <group id="MyExportGroup" text="Copy to html" popup="true">
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
-            <group text="test" popup="true">
-                <add-to-group group-id="MyExportGroup" anchor="first"/>
-                <action id="com.peterae86.export.ExportToHtmlAction" class="com.peterae86.export.ExportToHtmlAction"
-                        text="export to html" description="test">
-                </action>
-                <action id="com.peterae86.export.ExportToHtmlAction2" class="com.peterae86.export.ExportToHtmlAction"
-                        text="export to html2" description="test">
-                </action>
-            </group>
+            <action id="com.peterae86.export.ExportToHtmlAction" class="com.peterae86.export.ExportToHtmlAction"
+                    text="Copy with syntax mark" description="test">
+            </action>
+            <action id="com.peterae86.export.ExportToHtmlAction2" class="com.peterae86.export.ExportToHtmlAction"
+                    text="Copy with keyword mark" description="test">
+            </action>
+            <action id="com.peterae86.export.ExportToHtmlAction3" class="com.peterae86.export.ExportToHtmlAction"
+                    text="Copy with no style" description="test">
+            </action>
+            <action id="com.peterae86.export.ExportToHtmlAction4" class="com.peterae86.export.ExportToHtmlAction"
+                    text="Copy with fully style" description="test">
+            </action>
         </group>
 
     </actions>
