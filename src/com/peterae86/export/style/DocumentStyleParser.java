@@ -20,15 +20,20 @@ import java.util.Map;
  */
 public class DocumentStyleParser {
     private static Escaper escaper = HtmlEscapers.htmlEscaper();
-
-    Map<TextRange, Map<StyleType, String>> keywordStyle = new HashMap<>();
-    Map<TextRange, Map<StyleType, String>> syntaxStyle = new HashMap<>();
+    private HtmlStyle defalutStyle;
+    Map<TextRange, HtmlStyle> keywordStyle = new HashMap<>();
+    Map<TextRange, HtmlStyle> syntaxStyle = new HashMap<>();
 
     public DocumentStyleParser(Editor editor) {
+        parseDefaultStyle(editor);
         parseCodeAndStyle(editor);
     }
 
-    protected void parseCodeAndStyle(Editor editor) {
+    private void parseDefaultStyle(Editor editor) {
+
+    }
+
+    private void parseCodeAndStyle(Editor editor) {
         EditorImpl editorImpl = (EditorImpl) editor;
         DocumentImpl document = (DocumentImpl) editorImpl.getDocument();
         EditorFilteringMarkupModelEx filteredDocumentMarkupModel = (EditorFilteringMarkupModelEx) editorImpl.getFilteredDocumentMarkupModel();
