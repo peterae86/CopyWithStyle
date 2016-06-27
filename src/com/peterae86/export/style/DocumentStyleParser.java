@@ -3,6 +3,7 @@ package com.peterae86.export.style;
 import com.google.common.escape.Escaper;
 import com.google.common.html.HtmlEscapers;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.colors.EditorColorsScheme;
 import com.intellij.openapi.editor.highlighter.HighlighterIterator;
 import com.intellij.openapi.editor.impl.DocumentImpl;
 import com.intellij.openapi.editor.impl.EditorFilteringMarkupModelEx;
@@ -30,13 +31,20 @@ public class DocumentStyleParser {
     }
 
     private void parseDefaultStyle(Editor editor) {
-
+        defalutStyle = new HtmlStyle();
+        EditorColorsScheme colorsScheme = editor.getColorsScheme();
+        defalutStyle.add(StyleType.BACKGROUND, color2String(colorsScheme.getDefaultBackground()));
+        defalutStyle.add(StyleType.FOREGROUND, color2String(colorsScheme.getDefaultForeground()));
+        defalutStyle.add(StyleType.SIZE, colorsScheme.getEditorFontSize() + "");
+        defalutStyle.add(StyleType.LINE_SPACING, String.valueOf(colorsScheme.getLineSpacing()));
+        defalutStyle.add(StyleType.FONT, colorsScheme.getFontPreferences().toString());
     }
 
     private void parseCodeAndStyle(Editor editor) {
         EditorImpl editorImpl = (EditorImpl) editor;
         DocumentImpl document = (DocumentImpl) editorImpl.getDocument();
         EditorFilteringMarkupModelEx filteredDocumentMarkupModel = (EditorFilteringMarkupModelEx) editorImpl.getFilteredDocumentMarkupModel();
+
 
         HighlighterIterator iterator = editorImpl.getHighlighter().createIterator(0);
         while (!iterator.atEnd()) {
@@ -45,9 +53,9 @@ public class DocumentStyleParser {
             int end = iterator.getEnd();
             if (textAttributes.getForegroundColor() != null) {
                 if (!keywordStyle.containsKey(new TextRange(start, end))) {
-                    keywordStyle.put(new TextRange(start, end), new HashMap<>());
+                    keywordStyle.put(new TextRange(start, end), new HtmlStyle());
                 }
-                keywordStyle.get(new TextRange(start, end)).put(StyleType.Color, color2String(textAttributes.getForegroundColor()));
+                keywordStyle.get(new TextRange(start, end)).add(StyleType.FOREGROUND, color2String(textAttributes.getForegroundColor()));
             }
             iterator.advance();
         }
@@ -59,9 +67,9 @@ public class DocumentStyleParser {
             TextAttributes textAttributes = allHighlighter.getTextAttributes();
             if (textAttributes != null && textAttributes.getForegroundColor() != null) {
                 if (!syntaxStyle.containsKey(textRange)) {
-                    syntaxStyle.put(textRange, new HashMap<>());
+                    syntaxStyle.put(textRange, new HtmlStyle());
                 }
-                syntaxStyle.get(textRange).put(StyleType.Color, color2String(textAttributes.getForegroundColor()));
+                syntaxStyle.get(textRange).add(StyleType.FOREGROUND, color2String(textAttributes.getForegroundColor()));
             }
         }
     }
