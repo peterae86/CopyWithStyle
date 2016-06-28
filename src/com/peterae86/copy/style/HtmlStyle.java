@@ -1,5 +1,7 @@
 package com.peterae86.copy.style;
 
+import a.e.H;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -8,6 +10,7 @@ import java.util.Map;
  */
 public class HtmlStyle {
     private Map<StyleType, String> styleMap;
+
 
     public HtmlStyle() {
         this.styleMap = new HashMap<>();
@@ -28,6 +31,16 @@ public class HtmlStyle {
             sb.append(entry.getKey().getName()).append(":").append(entry.getValue()).append(";");
         }
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof HtmlStyle && ((HtmlStyle) obj).styleMap.equals(styleMap);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }
 
