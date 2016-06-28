@@ -1,9 +1,9 @@
-package com.peterae86.export.style;
+package com.peterae86.copy.style;
 
 /**
  * Created by xiaorui.guo on 2016/6/23.
  */
-enum StyleType {
+public enum StyleType {
     LINE_SPACING("line-height"),
     FONT("font-family"),
     BACKGROUND("background-color"),

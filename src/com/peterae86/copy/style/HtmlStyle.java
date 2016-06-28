@@ -1,4 +1,4 @@
-package com.peterae86.export.style;
+package com.peterae86.copy.style;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,8 +18,16 @@ public class HtmlStyle {
         return this;
     }
 
+    public String get(StyleType type) {
+        return styleMap.get(type);
+    }
+
     public String toString() {
-        return "";
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<StyleType, String> entry : styleMap.entrySet()) {
+            sb.append(entry.getKey().getName()).append(":").append(entry.getValue()).append(";");
+        }
+        return sb.toString();
     }
 }
 
