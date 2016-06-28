@@ -96,18 +96,18 @@ public class DocumentStyleParser {
         if (startLine > endLine || startLine < 0 || endLine >= textLines.size()) {
             return "error line";
         }
-        sb.append(String.format("<div style=\"%s\">", defalutStyle.toString()));
+        sb.append(String.format("<div style=\"%s\">\n", defalutStyle.toString()));
         for (List<Pair<TextRange, String>> line : textLines.subList(startLine, endLine + 1)) {
-            sb.append("<p>");
+            sb.append("<p>\n");
             for (Pair<TextRange, String> text : line) {
                 sb.append(String.format("<span style=\"%s\">",
                         htmlStyleCombiner.combine(keywordStyle.get(text.getFirst()), syntaxStyle.get(text.getFirst()))));
-                sb.append(text.getSecond());
+                sb.append(escaper.escape(text.getSecond()).replace(" ","&ensp;").replace("\n", ""));
                 sb.append("</span>");
             }
-            sb.append("</p>");
+            sb.append("</p>\n");
         }
-        sb.append("</div>");
+        sb.append("</div>\n");
         return sb.toString();
     }
 

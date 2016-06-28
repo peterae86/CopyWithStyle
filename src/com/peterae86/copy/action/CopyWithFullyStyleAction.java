@@ -14,6 +14,9 @@ public class CopyWithFullyStyleAction extends BaseAction {
         return new DocumentStyleParser(editor).getHtmlContent(startLine, endLine, new HtmlStyleCombiner() {
             @Override
             public HtmlStyle combine(HtmlStyle keyword, HtmlStyle syntax) {
+                if (syntax == null) {
+                    return keyword;
+                }
                 if (StringUtil.isEmpty(syntax.get(StyleType.FOREGROUND))) {
                     syntax.add(StyleType.FOREGROUND, keyword.get(StyleType.FOREGROUND));
                 }
