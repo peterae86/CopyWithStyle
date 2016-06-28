@@ -8,7 +8,12 @@ public enum StyleType {
     FONT("font-family"),
     BACKGROUND("background-color"),
     FOREGROUND("color"),
-    SIZE("font-size"),;
+    SIZE("font-size"),
+    WAVE_UNDERSCORE("border-bottom"),
+    LINE_UNDERSCORE("border-bottom"),
+    TEXT_DECORATION_COLOR("text-decoration-color"),
+    STRIKEOUT(""),
+    SEARCH_MATCH(""), HEIGHT("height");
 
     private String name;
 

@@ -17,7 +17,7 @@ public class CopyWithFullyStyleAction extends BaseAction {
                 if (syntax == null) {
                     return keyword;
                 }
-                if (StringUtil.isEmpty(syntax.get(StyleType.FOREGROUND))) {
+                if (StringUtil.isEmpty(syntax.get(StyleType.FOREGROUND)) && keyword != null) {
                     syntax.add(StyleType.FOREGROUND, keyword.get(StyleType.FOREGROUND));
                 }
                 return syntax;

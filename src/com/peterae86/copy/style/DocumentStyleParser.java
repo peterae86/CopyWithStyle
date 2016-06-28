@@ -1,5 +1,6 @@
 package com.peterae86.copy.style;
 
+import com.google.common.base.Joiner;
 import com.google.common.escape.Escaper;
 import com.google.common.html.HtmlEscapers;
 import com.intellij.openapi.editor.Editor;
@@ -14,10 +15,7 @@ import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.TextRange;
 
 import java.awt.Color;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by xiaorui.guo on 2016/6/23.
@@ -41,7 +39,8 @@ public class DocumentStyleParser {
         defalutStyle.add(StyleType.FOREGROUND, color2String(colorsScheme.getDefaultForeground()));
         defalutStyle.add(StyleType.SIZE, colorsScheme.getEditorFontSize() + "");
         defalutStyle.add(StyleType.LINE_SPACING, String.valueOf(colorsScheme.getLineSpacing()));
-        defalutStyle.add(StyleType.FONT, colorsScheme.getFontPreferences().toString());
+        defalutStyle.add(StyleType.FONT, Joiner.on(",").join(colorsScheme.getFontPreferences().getEffectiveFontFamilies()));
+        defalutStyle.add(StyleType.HEIGHT, String.valueOf(editor.getLineHeight()));
     }
 
     private void parseCodeAndStyle(Editor editor) {
@@ -78,15 +77,28 @@ public class DocumentStyleParser {
         }
 
 
-        RangeHighlighter[] allHighlighters = filteredDocumentMarkupModel.getDelegate().getAllHighlighters();
+        RangeHighlighter[] allHighlighters = filteredDocumentMarkupModel.getAllHighlighters();
+        Arrays.sort(allHighlighters, (o1, o2) -> Integer.compare(o1.getLayer(), o2.getLayer()));
+
         for (RangeHighlighter allHighlighter : allHighlighters) {
             TextRange textRange = new TextRange(allHighlighter.getStartOffset(), allHighlighter.getEndOffset());
             TextAttributes textAttributes = allHighlighter.getTextAttributes();
-            if (textAttributes != null && textAttributes.getForegroundColor() != null) {
+            if (textAttributes != null) {
                 if (!syntaxStyle.containsKey(textRange)) {
                     syntaxStyle.put(textRange, new HtmlStyle());
                 }
-                syntaxStyle.get(textRange).add(StyleType.FOREGROUND, color2String(textAttributes.getForegroundColor()));
+                HtmlStyle htmlStyle = syntaxStyle.get(textRange);
+                switch (textAttributes.getEffectType()) {
+                    case WAVE_UNDERSCORE:
+                        htmlStyle.add(StyleType.WAVE_UNDERSCORE, "1px solid " + color2String(textAttributes.getEffectColor()));
+                        break;
+                }
+                if (textAttributes.getForegroundColor() != null) {
+                    htmlStyle.add(StyleType.FOREGROUND, color2String(textAttributes.getForegroundColor()));
+                }
+                if (textAttributes.getBackgroundColor() != null) {
+                    htmlStyle.add(StyleType.BACKGROUND, color2String(textAttributes.getBackgroundColor()));
+                }
             }
         }
     }
@@ -96,13 +108,13 @@ public class DocumentStyleParser {
         if (startLine > endLine || startLine < 0 || endLine >= textLines.size()) {
             return "error line";
         }
-        sb.append(String.format("<div style=\"%s\">\n", defalutStyle.toString()));
+        sb.append(String.format("<div style=\"margin:0;padding:0;%s\">\n", defalutStyle.toString()));
         for (List<Pair<TextRange, String>> line : textLines.subList(startLine, endLine + 1)) {
-            sb.append("<p>\n");
+            sb.append("<p style=\"margin:0;padding:0;\">\n");
             for (Pair<TextRange, String> text : line) {
-                sb.append(String.format("<span style=\"%s\">",
-                        htmlStyleCombiner.combine(keywordStyle.get(text.getFirst()), syntaxStyle.get(text.getFirst()))));
-                sb.append(escaper.escape(text.getSecond()).replace(" ","&ensp;").replace("\n", ""));
+                HtmlStyle combine = htmlStyleCombiner.combine(keywordStyle.get(text.getFirst()), syntaxStyle.get(text.getFirst()));
+                sb.append(String.format("<span style=\"%s\">", combine == null ? "" : combine));
+                sb.append(escaper.escape(text.getSecond()).replace(" ", "&ensp;").replace("\n", ""));
                 sb.append("</span>");
             }
             sb.append("</p>\n");
@@ -112,6 +124,9 @@ public class DocumentStyleParser {
     }
 
     private String color2String(Color color) {
+        if (color == null) {
+            return "";
+        }
         String R = Integer.toHexString(color.getRed());
         R = R.length() < 2 ? ('0' + R) : R;
         String B = Integer.toHexString(color.getBlue());
