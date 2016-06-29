@@ -38,6 +38,10 @@ public class HtmlStyle {
         return obj instanceof HtmlStyle && ((HtmlStyle) obj).styleMap.equals(styleMap);
     }
 
+    public boolean isEmpty() {
+        return styleMap.size() == 0;
+    }
+
     @Override
     public int hashCode() {
         return styleMap.hashCode();
