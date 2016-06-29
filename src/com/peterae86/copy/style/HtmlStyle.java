@@ -9,6 +9,7 @@ import java.util.Map;
  * Created by xiaorui.guo on 2016/6/23.
  */
 public class HtmlStyle {
+    private boolean isBefore = false;
     private Map<StyleType, String> styleMap;
 
 
@@ -33,18 +34,35 @@ public class HtmlStyle {
         return sb.toString();
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        return obj instanceof HtmlStyle && ((HtmlStyle) obj).styleMap.equals(styleMap);
-    }
-
     public boolean isEmpty() {
         return styleMap.size() == 0;
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        HtmlStyle htmlStyle = (HtmlStyle) o;
+
+        if (isBefore != htmlStyle.isBefore) return false;
+        return styleMap != null ? styleMap.equals(htmlStyle.styleMap) : htmlStyle.styleMap == null;
+
+    }
+
+    @Override
     public int hashCode() {
-        return styleMap.hashCode();
+        int result = (isBefore ? 1 : 0);
+        result = 31 * result + (styleMap != null ? styleMap.hashCode() : 0);
+        return result;
+    }
+
+    public boolean isBefore() {
+        return isBefore;
+    }
+
+    public void setBefore(boolean before) {
+        isBefore = before;
     }
 }
 

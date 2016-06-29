@@ -9,11 +9,16 @@ public enum StyleType {
     BACKGROUND("background-color"),
     FOREGROUND("color"),
     SIZE("font-size"),
-    WAVE_UNDERSCORE("border-bottom"),
+    WAVE_UNDERSCORE("text-decoration"),
     LINE_UNDERSCORE("border-bottom"),
+    TEXT_DECORATION_STYLE("text-decoration-color"),
     TEXT_DECORATION_COLOR("text-decoration-color"),
-    STRIKEOUT(""),
-    SEARCH_MATCH(""), HEIGHT("height"), MARGIN("margin"), PADDING("padding");
+    HEIGHT("height"),
+    MARGIN("margin"),
+    PADDING("padding"),
+    DISPLAY("display"),
+    POSITION("position"),
+    CONTENT("content"), WIDTH("width"), TOP("top"), OVER_FLOW("overflow");
 
     private String name;
 

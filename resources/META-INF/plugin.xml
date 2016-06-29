@@ -44,7 +44,7 @@
             </action>
             <action id="com.peterae86.copy.ExportToHtmlAction4"
                     class="com.peterae86.copy.action.CopyWithFullyStyleAction"
-                    text="Copy with fully style" description="test">
+                    text="Copy with full style" description="test">
             </action>
         </group>
     </actions>
