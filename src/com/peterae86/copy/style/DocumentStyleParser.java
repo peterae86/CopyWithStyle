@@ -73,10 +73,12 @@ public class DocumentStyleParser {
         EditorColorsScheme colorsScheme = editor.getColorsScheme();
         defalutStyle.add(StyleType.BACKGROUND, color2String(colorsScheme.getDefaultBackground()));
         defalutStyle.add(StyleType.FOREGROUND, color2String(colorsScheme.getDefaultForeground()));
-        defalutStyle.add(StyleType.SIZE, colorsScheme.getEditorFontSize() + "");
+        defalutStyle.add(StyleType.SIZE, colorsScheme.getEditorFontSize() + "px");
         defalutStyle.add(StyleType.LINE_SPACING, String.valueOf(colorsScheme.getLineSpacing()));
         defalutStyle.add(StyleType.FONT, Joiner.on(",").join(colorsScheme.getFontPreferences().getEffectiveFontFamilies()));
-        defalutStyle.add(StyleType.HEIGHT, String.valueOf(editor.getLineHeight()));
+        defalutStyle.add(StyleType.HEIGHT, String.valueOf(editor.getLineHeight()) + "px");
+        defalutStyle.add(StyleType.MARGIN, "0px");
+        defalutStyle.add(StyleType.PADDING, "0px");
     }
 
     private void parseStyle(Editor editor) {
@@ -135,7 +137,7 @@ public class DocumentStyleParser {
                     end = -end - 1;
                 }
                 for (int i = start; i < end; i++) {
-                    map.get(htmlStyle).add(".code_" + i);
+                    map.get(htmlStyle).add(".code_" + codeIntervalStartPoints[i]);
                 }
             }
         }
@@ -154,6 +156,12 @@ public class DocumentStyleParser {
         sb.append("<style>\n");
         sb.append(String.format(".line{%s}\n", defalutStyle));
         for (Map.Entry<HtmlStyle, Set<String>> entry : styleLayer2000.entrySet()) {
+            sb.append(String.format("%s{%s}\n", joiner.join(entry.getValue()), entry.getKey()));
+        }
+        for (Map.Entry<HtmlStyle, Set<String>> entry : styleLayer3000.entrySet()) {
+            sb.append(String.format("%s{%s}\n", joiner.join(entry.getValue()), entry.getKey()));
+        }
+        for (Map.Entry<HtmlStyle, Set<String>> entry : styleLayer4000.entrySet()) {
             sb.append(String.format("%s{%s}\n", joiner.join(entry.getValue()), entry.getKey()));
         }
         sb.append("</style>\n");

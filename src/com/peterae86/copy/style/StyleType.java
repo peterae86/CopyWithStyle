@@ -13,7 +13,7 @@ public enum StyleType {
     LINE_UNDERSCORE("border-bottom"),
     TEXT_DECORATION_COLOR("text-decoration-color"),
     STRIKEOUT(""),
-    SEARCH_MATCH(""), HEIGHT("height");
+    SEARCH_MATCH(""), HEIGHT("height"), MARGIN("margin"), PADDING("padding");
 
     private String name;
 

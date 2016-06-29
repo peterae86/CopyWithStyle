@@ -40,7 +40,7 @@ public class HtmlStyle {
 
     @Override
     public int hashCode() {
-        return super.hashCode();
+        return styleMap.hashCode();
     }
 }
 
