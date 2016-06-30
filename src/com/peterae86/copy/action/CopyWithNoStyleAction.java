@@ -7,7 +7,6 @@ public class CopyWithNoStyleAction extends BaseAction {
 
     @Override
     String getContent(Editor editor, int startLine, int endLine) {
-        String res = new DocumentStyleParser(editor).getHtmlContent(startLine, endLine, 0);
-        return res.replaceFirst("<div.*?>", "<div>");
+        return new DocumentStyleParser(editor).getHtmlContent(startLine, endLine, 0);
     }
 }
