@@ -19,7 +19,6 @@ import com.intellij.openapi.util.TextRange;
 
 import java.awt.Color;
 import java.util.*;
-import java.util.function.IntFunction;
 
 /**
  * Created by xiaorui.guo on 2016/6/23.
@@ -27,8 +26,9 @@ import java.util.function.IntFunction;
 public class DocumentStyleParser {
     private static Escaper escaper = HtmlEscapers.htmlEscaper();
     private static Joiner joiner = Joiner.on(",");
-    private static HtmlStyle lineStyle;
-    private static HtmlStyle spanStyle;
+    private HtmlStyle defaultStyle;
+    private HtmlStyle lineStyle;
+    private HtmlStyle spanStyle;
 
     TreeMap<Integer, Map<HtmlStyle, Set<String>>> styleLayerMap = new TreeMap<>();
 
@@ -72,29 +72,31 @@ public class DocumentStyleParser {
 
     private void parseDefaultStyle(Editor editor) {
         EditorColorsScheme colorsScheme = editor.getColorsScheme();
-        if (lineStyle == null) {
-            lineStyle = new HtmlStyle();
-            lineStyle.add(StyleType.BACKGROUND, color2String(colorsScheme.getDefaultBackground()));
-            lineStyle.add(StyleType.FOREGROUND, color2String(colorsScheme.getDefaultForeground()));
-            lineStyle.add(StyleType.SIZE, colorsScheme.getEditorFontSize() + "px");
-            lineStyle.add(StyleType.LINE_SPACING, String.valueOf(colorsScheme.getLineSpacing()));
-            lineStyle.add(StyleType.FONT, Joiner.on(",").join(colorsScheme.getFontPreferences().getEffectiveFontFamilies()) + ",serif");
-            lineStyle.add(StyleType.HEIGHT, String.valueOf(editor.getLineHeight()) + "px");
-            lineStyle.add(StyleType.MARGIN, "0");
-            lineStyle.add(StyleType.PADDING, "0");
-        }
-        if (spanStyle == null) {
-            spanStyle = new HtmlStyle();
-            spanStyle.add(StyleType.DISPLAY, "inline-block");
-            spanStyle.add(StyleType.POSITION, "relative");
-            spanStyle.add(StyleType.MARGIN, "0");
-            spanStyle.add(StyleType.PADDING, "0");
-            lineStyle.add(StyleType.LINE_SPACING, String.valueOf(editor.getLineHeight()) + "px");
-            spanStyle.add(StyleType.HEIGHT, String.valueOf(editor.getLineHeight()) + "px");
-        }
+        defaultStyle = new HtmlStyle();
+        defaultStyle.add(StyleType.BACKGROUND, color2String(colorsScheme.getDefaultBackground()));
+        defaultStyle.add(StyleType.FOREGROUND, color2String(colorsScheme.getDefaultForeground()));
+        defaultStyle.add(StyleType.SIZE, colorsScheme.getEditorFontSize() + "px");
+        defaultStyle.add(StyleType.FONT, Joiner.on(",").join(colorsScheme.getFontPreferences().getEffectiveFontFamilies()) + ",serif");
+        defaultStyle.add(StyleType.MARGIN, " -1px 0 0");
+        defaultStyle.add(StyleType.PADDING, "0");
+        defaultStyle.add(StyleType._WEBKIT_MARGIN_BEFORE, "0");
+        defaultStyle.add(StyleType._WEBKIT_MARGIN_AFTER, "0");
+        lineStyle = new HtmlStyle();
+        lineStyle.add(StyleType.LINE_SPACING, String.valueOf(colorsScheme.getLineSpacing()));
+        lineStyle.add(StyleType.HEIGHT, String.valueOf(editor.getLineHeight()) + "px");
+        lineStyle.add(StyleType.PADDING, "0");
+
+        spanStyle = new HtmlStyle();
+        spanStyle.add(StyleType.DISPLAY, "inline-block");
+        spanStyle.add(StyleType.POSITION, "relative");
+        spanStyle.add(StyleType.PADDING, "0");
+        lineStyle.add(StyleType.LINE_SPACING, String.valueOf(editor.getLineHeight()) + "px");
+        spanStyle.add(StyleType.HEIGHT, String.valueOf(editor.getLineHeight()) + "px");
+
         HashMap<HtmlStyle, Set<String>> map = Maps.newHashMapWithExpectedSize(2);
         map.put(lineStyle, Sets.newHashSet(".line"));
         map.put(spanStyle, Sets.newHashSet(".span"));
+        map.put(defaultStyle, Sets.newHashSet("p"));
         styleLayerMap.put(1000, map);
     }
 
@@ -129,13 +131,13 @@ public class DocumentStyleParser {
                         case WAVE_UNDERSCORE:
                             if (textAttributes.getEffectColor() != null) {
                                 htmlStyle.setBefore(true);
-                                htmlStyle.add(StyleType.CONTENT, "\"" + Strings.repeat("~", highlighter.getEndOffset() - highlighter.getStartOffset()) + "\"");
-                                htmlStyle.add(StyleType.SIZE, "0.6em");
+                                htmlStyle.add(StyleType.CONTENT, "\"" + Strings.repeat("~", (highlighter.getEndOffset() - highlighter.getStartOffset()) * 2) + "\"");
+                                htmlStyle.add(StyleType.SIZE, ((EditorImpl) editor).getFontSize() / 2.0 + "px");
                                 htmlStyle.add(StyleType.FOREGROUND, color2String(textAttributes.getEffectColor()));
                                 htmlStyle.add(StyleType.WIDTH, "100%");
                                 htmlStyle.add(StyleType.POSITION, "absolute");
-                                htmlStyle.add(StyleType.TOP, ((EditorImpl) editor).getFontSize() + 1 + "px");
-                                htmlStyle.add(StyleType.OVER_FLOW,"hidden");
+                                htmlStyle.add(StyleType.TOP, ((EditorImpl) editor).getFontSize() * 3 / 4.0 + "px");
+                                htmlStyle.add(StyleType.OVER_FLOW, "hidden");
                             }
                             break;
                         case LINE_UNDERSCORE:
@@ -149,6 +151,9 @@ public class DocumentStyleParser {
                             }
                             break;
                     }
+                }
+                if (textAttributes.getFontType() == 2) {
+                    htmlStyle.add(StyleType.FONT_TYPE, "oblique");
                 }
                 if (textAttributes.getForegroundColor() != null) {
                     htmlStyle.add(StyleType.FOREGROUND, color2String(textAttributes.getForegroundColor()));
@@ -226,12 +231,6 @@ public class DocumentStyleParser {
         if (color == null) {
             return "";
         }
-        String R = Integer.toHexString(color.getRed());
-        R = R.length() < 2 ? ('0' + R) : R;
-        String B = Integer.toHexString(color.getBlue());
-        B = B.length() < 2 ? ('0' + B) : B;
-        String G = Integer.toHexString(color.getGreen());
-        G = G.length() < 2 ? ('0' + G) : G;
-        return '#' + R + G + B;
+        return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
     }
 }

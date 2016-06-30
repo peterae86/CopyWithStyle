@@ -1,17 +1,15 @@
 <idea-plugin version="2">
-    <id>com.your.company.unique.plugin.id</id>
-    <name>Plugin display name here</name>
+    <id>com.peterae86.copy</id>
+    <name>CopyWithStyle</name>
     <version>1.0</version>
-    <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+    <vendor email="775870132@qq.com" url="http://www.backkoms.com">..</vendor>
 
     <description><![CDATA[
-      Enter short description for your plugin here.<br>
-      <em>most HTML tags may be used</em>
+        This plugin allows copying code from editor to clipboard with colors and style.!
     ]]></description>
 
     <change-notes><![CDATA[
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>
+      1.0 <br>
     ]]>
     </change-notes>
 
@@ -28,7 +26,7 @@
         <!-- Add your extensions here -->
     </extensions>
     <actions>
-        <group id="MyExportGroup" text="Copy to html" popup="true">
+        <group id="MyExportGroup" text="Copy with style" popup="true">
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
             <action id="com.peterae86.copy.ExportToHtmlAction"
                     class="com.peterae86.copy.action.CopyWithSyntaxStyleAction"

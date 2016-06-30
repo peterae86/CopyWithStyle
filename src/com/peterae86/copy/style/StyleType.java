@@ -11,14 +11,12 @@ public enum StyleType {
     SIZE("font-size"),
     WAVE_UNDERSCORE("text-decoration"),
     LINE_UNDERSCORE("border-bottom"),
-    TEXT_DECORATION_STYLE("text-decoration-color"),
-    TEXT_DECORATION_COLOR("text-decoration-color"),
     HEIGHT("height"),
     MARGIN("margin"),
     PADDING("padding"),
     DISPLAY("display"),
     POSITION("position"),
-    CONTENT("content"), WIDTH("width"), TOP("top"), OVER_FLOW("overflow");
+    CONTENT("content"), WIDTH("width"), TOP("top"), OVER_FLOW("overflow"), FONT_TYPE("font-style"), _WEBKIT_MARGIN_AFTER("-webkit-margin-after"), _WEBKIT_MARGIN_BEFORE("-webkit-margin-before");
 
     private String name;
 
