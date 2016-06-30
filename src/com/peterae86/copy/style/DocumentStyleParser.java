@@ -61,7 +61,7 @@ public class DocumentStyleParser {
                 textLines.add(textLine);
             }
             textLine.add(Pair.create(textRange, text));
-            if (text.endsWith("\n")) {
+            if (!text.startsWith("\n") && text.endsWith("\n")) {
                 textLine = new ArrayList<>();
                 textLines.add(textLine);
             }
@@ -77,10 +77,8 @@ public class DocumentStyleParser {
         defaultStyle.add(StyleType.FOREGROUND, color2String(colorsScheme.getDefaultForeground()));
         defaultStyle.add(StyleType.SIZE, colorsScheme.getEditorFontSize() + "px");
         defaultStyle.add(StyleType.FONT, Joiner.on(",").join(colorsScheme.getFontPreferences().getEffectiveFontFamilies()) + ",serif");
-        defaultStyle.add(StyleType.MARGIN, " -1px 0 0");
+        defaultStyle.add(StyleType.MARGIN, "0");
         defaultStyle.add(StyleType.PADDING, "0");
-        defaultStyle.add(StyleType._WEBKIT_MARGIN_BEFORE, "0");
-        defaultStyle.add(StyleType._WEBKIT_MARGIN_AFTER, "0");
         lineStyle = new HtmlStyle();
         lineStyle.add(StyleType.LINE_SPACING, String.valueOf(colorsScheme.getLineSpacing()));
         lineStyle.add(StyleType.HEIGHT, String.valueOf(editor.getLineHeight()) + "px");
@@ -96,7 +94,7 @@ public class DocumentStyleParser {
         HashMap<HtmlStyle, Set<String>> map = Maps.newHashMapWithExpectedSize(2);
         map.put(lineStyle, Sets.newHashSet(".line"));
         map.put(spanStyle, Sets.newHashSet(".span"));
-        map.put(defaultStyle, Sets.newHashSet("p"));
+        map.put(defaultStyle, Sets.newHashSet("div"));
         styleLayerMap.put(1000, map);
     }
 
@@ -214,6 +212,7 @@ public class DocumentStyleParser {
             }
         }
         sb.append("</style>\n");
+        sb.append("<div>\n");
         for (List<Pair<TextRange, String>> line : textLines.subList(startLine, endLine + 1)) {
             sb.append("<p class=\"line\">\n");
             for (Pair<TextRange, String> text : line) {
@@ -223,6 +222,7 @@ public class DocumentStyleParser {
             }
             sb.append("</p>\n");
         }
+        sb.append("</div>\n");
         sb.append("</div>\n");
         return sb.toString();
     }
