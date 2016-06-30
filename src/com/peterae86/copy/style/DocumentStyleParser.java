@@ -19,6 +19,7 @@ import com.intellij.openapi.util.TextRange;
 
 import java.awt.Color;
 import java.util.*;
+import java.util.function.IntFunction;
 
 /**
  * Created by xiaorui.guo on 2016/6/23.
@@ -26,9 +27,8 @@ import java.util.*;
 public class DocumentStyleParser {
     private static Escaper escaper = HtmlEscapers.htmlEscaper();
     private static Joiner joiner = Joiner.on(",");
-    private HtmlStyle defaultStyle;
-    private HtmlStyle lineStyle;
-    private HtmlStyle spanStyle;
+    private static HtmlStyle lineStyle;
+    private static HtmlStyle spanStyle;
 
     TreeMap<Integer, Map<HtmlStyle, Set<String>>> styleLayerMap = new TreeMap<>();
 
@@ -56,14 +56,19 @@ public class DocumentStyleParser {
             startPoints.add(start);
             TextRange textRange = new TextRange(start, end);
             String text = document.getText(textRange);
-            if (text.startsWith("\n")) {
+            int startIndex = 0;
+            while (startIndex < text.length() && text.charAt(startIndex) == '\n') {
                 textLine = new ArrayList<>();
                 textLines.add(textLine);
+                startIndex++;
             }
             textLine.add(Pair.create(textRange, text));
-            if (!text.startsWith("\n") && text.endsWith("\n")) {
-                textLine = new ArrayList<>();
-                textLines.add(textLine);
+            if (startIndex < text.length() && text.endsWith("\n")) {
+                int endIndex = text.length() - 1;
+                while (endIndex >= 0 && text.charAt(endIndex) == '\n') {
+                    textLine = new ArrayList<>();
+                    textLines.add(textLine);
+                }
             }
             iterator.advance();
         }
@@ -72,29 +77,29 @@ public class DocumentStyleParser {
 
     private void parseDefaultStyle(Editor editor) {
         EditorColorsScheme colorsScheme = editor.getColorsScheme();
-        defaultStyle = new HtmlStyle();
-        defaultStyle.add(StyleType.BACKGROUND, color2String(colorsScheme.getDefaultBackground()));
-        defaultStyle.add(StyleType.FOREGROUND, color2String(colorsScheme.getDefaultForeground()));
-        defaultStyle.add(StyleType.SIZE, colorsScheme.getEditorFontSize() + "px");
-        defaultStyle.add(StyleType.FONT, Joiner.on(",").join(colorsScheme.getFontPreferences().getEffectiveFontFamilies()) + ",serif");
-        defaultStyle.add(StyleType.MARGIN, "0");
-        defaultStyle.add(StyleType.PADDING, "0");
+
         lineStyle = new HtmlStyle();
+        lineStyle.add(StyleType.BACKGROUND, color2String(colorsScheme.getDefaultBackground()));
+        lineStyle.add(StyleType.FOREGROUND, color2String(colorsScheme.getDefaultForeground()));
+        lineStyle.add(StyleType.SIZE, ((EditorImpl) editor).getFontSize() + "px");
         lineStyle.add(StyleType.LINE_SPACING, String.valueOf(colorsScheme.getLineSpacing()));
+        lineStyle.add(StyleType.FONT, Joiner.on(",").join(colorsScheme.getFontPreferences().getEffectiveFontFamilies()) + ",serif");
         lineStyle.add(StyleType.HEIGHT, String.valueOf(editor.getLineHeight()) + "px");
+        lineStyle.add(StyleType.MARGIN, "0");
         lineStyle.add(StyleType.PADDING, "0");
+
 
         spanStyle = new HtmlStyle();
         spanStyle.add(StyleType.DISPLAY, "inline-block");
         spanStyle.add(StyleType.POSITION, "relative");
+        spanStyle.add(StyleType.MARGIN, "0");
         spanStyle.add(StyleType.PADDING, "0");
-        lineStyle.add(StyleType.LINE_SPACING, String.valueOf(editor.getLineHeight()) + "px");
+        spanStyle.add(StyleType.LINE_SPACING, String.valueOf(editor.getLineHeight()) + "px");
         spanStyle.add(StyleType.HEIGHT, String.valueOf(editor.getLineHeight()) + "px");
 
         HashMap<HtmlStyle, Set<String>> map = Maps.newHashMapWithExpectedSize(2);
         map.put(lineStyle, Sets.newHashSet(".line"));
         map.put(spanStyle, Sets.newHashSet(".span"));
-        map.put(defaultStyle, Sets.newHashSet("div"));
         styleLayerMap.put(1000, map);
     }
 
@@ -129,12 +134,12 @@ public class DocumentStyleParser {
                         case WAVE_UNDERSCORE:
                             if (textAttributes.getEffectColor() != null) {
                                 htmlStyle.setBefore(true);
-                                htmlStyle.add(StyleType.CONTENT, "\"" + Strings.repeat("~", (highlighter.getEndOffset() - highlighter.getStartOffset()) * 2) + "\"");
-                                htmlStyle.add(StyleType.SIZE, ((EditorImpl) editor).getFontSize() / 2.0 + "px");
+                                htmlStyle.add(StyleType.CONTENT, "\"" + Strings.repeat("~", highlighter.getEndOffset() - highlighter.getStartOffset()) + "\"");
+                                htmlStyle.add(StyleType.SIZE, editor.getLineHeight() - ((EditorImpl) editor).getFontSize() + "px");
                                 htmlStyle.add(StyleType.FOREGROUND, color2String(textAttributes.getEffectColor()));
                                 htmlStyle.add(StyleType.WIDTH, "100%");
                                 htmlStyle.add(StyleType.POSITION, "absolute");
-                                htmlStyle.add(StyleType.TOP, ((EditorImpl) editor).getFontSize() * 3 / 4.0 + "px");
+                                htmlStyle.add(StyleType.TOP, ((EditorImpl) editor).getFontSize() - 1 + "px");
                                 htmlStyle.add(StyleType.OVER_FLOW, "hidden");
                             }
                             break;
@@ -149,9 +154,6 @@ public class DocumentStyleParser {
                             }
                             break;
                     }
-                }
-                if (textAttributes.getFontType() == 2) {
-                    htmlStyle.add(StyleType.FONT_TYPE, "oblique");
                 }
                 if (textAttributes.getForegroundColor() != null) {
                     htmlStyle.add(StyleType.FOREGROUND, color2String(textAttributes.getForegroundColor()));
@@ -212,9 +214,11 @@ public class DocumentStyleParser {
             }
         }
         sb.append("</style>\n");
-        sb.append("<div>\n");
         for (List<Pair<TextRange, String>> line : textLines.subList(startLine, endLine + 1)) {
             sb.append("<p class=\"line\">\n");
+            if(line.size()==0){
+                sb.append("<span class=\"span\"> </span>\n");
+            }
             for (Pair<TextRange, String> text : line) {
                 sb.append(String.format("<span class=\"span code_%s\">", text.getFirst().getStartOffset()));
                 sb.append(escaper.escape(text.getSecond()).replace(" ", "&ensp;").replace("\n", ""));
@@ -223,7 +227,6 @@ public class DocumentStyleParser {
             sb.append("</p>\n");
         }
         sb.append("</div>\n");
-        sb.append("</div>\n");
         return sb.toString();
     }
 
@@ -231,6 +234,12 @@ public class DocumentStyleParser {
         if (color == null) {
             return "";
         }
-        return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+        String R = Integer.toHexString(color.getRed());
+        R = R.length() < 2 ? ('0' + R) : R;
+        String B = Integer.toHexString(color.getBlue());
+        B = B.length() < 2 ? ('0' + B) : B;
+        String G = Integer.toHexString(color.getGreen());
+        G = G.length() < 2 ? ('0' + G) : G;
+        return '#' + R + G + B;
     }
 }
