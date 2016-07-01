@@ -1,10 +1,7 @@
 package com.peterae86.copy.action;
 
 import com.intellij.openapi.actionSystem.DataContext;
-import com.intellij.openapi.editor.Caret;
-import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.SelectionModel;
-import com.intellij.openapi.editor.VisualPosition;
+import com.intellij.openapi.editor.*;
 import com.intellij.openapi.editor.actionSystem.EditorAction;
 import com.intellij.openapi.editor.actionSystem.EditorActionHandler;
 import org.jetbrains.annotations.Nullable;
@@ -24,12 +21,25 @@ public abstract class BaseAction extends EditorAction {
             @Override
             protected void doExecute(Editor editor, @Nullable Caret caret, DataContext dataContext) {
                 SelectionModel selectionModel = editor.getSelectionModel();
-                VisualPosition startPosition = selectionModel.getSelectionStartPosition();
-                VisualPosition endPosition = selectionModel.getSelectionEndPosition();
-                if (startPosition == null || endPosition == null) {
+                int selectionStart = selectionModel.getSelectionStart();
+                int selectionEnd = selectionModel.getSelectionEnd();
+                if (selectionStart == selectionEnd) {
                     return;
                 }
-                String content = getContent(editor, startPosition.getLine(), endPosition.getLine());
+                Document document = editor.getDocument();
+                int startLine = 0;
+                int endLine = 0;
+                for (int i = 0; i < document.getLineCount(); i++) {
+                    int lineStartOffset = document.getLineStartOffset(i);
+                    int lineEndOffset = document.getLineEndOffset(i);
+                    if (lineStartOffset <= selectionStart && selectionStart <= lineEndOffset) {
+                        startLine = i;
+                    }
+                    if (lineStartOffset <= selectionEnd && selectionEnd <= lineEndOffset) {
+                        endLine = i;
+                    }
+                }
+                String content = getContent(editor, startLine, endLine);
                 Clipboard systemClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 Transferable tText = new StringSelection(content);
                 systemClipboard.setContents(tText, null);

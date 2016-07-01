@@ -16,7 +16,12 @@ public enum StyleType {
     PADDING("padding"),
     DISPLAY("display"),
     POSITION("position"),
-    CONTENT("content"), WIDTH("width"), TOP("top"), OVER_FLOW("overflow"), FONT_TYPE("font-style"), _WEBKIT_MARGIN_AFTER("-webkit-margin-after"), _WEBKIT_MARGIN_BEFORE("-webkit-margin-before");
+    CONTENT("content"),
+    WIDTH("width"),
+    TOP("top"),
+    OVER_FLOW("overflow"),
+    FONT_TYPE("font-style"),
+    VERTICAL_ALIGN("vertical-align");
 
     private String name;
 

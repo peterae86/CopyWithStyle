@@ -6,7 +6,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.escape.Escaper;
 import com.google.common.html.HtmlEscapers;
-import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.*;
 import com.intellij.openapi.editor.colors.EditorColorsScheme;
 import com.intellij.openapi.editor.highlighter.HighlighterIterator;
 import com.intellij.openapi.editor.impl.DocumentImpl;
@@ -34,12 +34,33 @@ public class DocumentStyleParser {
 
     private Integer[] codeIntervalStartPoints;
     private List<List<Pair<TextRange, String>>> textLines = new ArrayList<>();
+    private LineRangeTree[] lineRangeTrees;
 
-
-    public DocumentStyleParser(Editor editor) {
+    public DocumentStyleParser(Editor editor, int startLine, int endLine) {
+        Document document = editor.getDocument();
+        buildLineRangeTrees(document, startLine, endLine);
         parseDefaultStyle(editor);
         parseCodeInterval(editor);
         parseStyle(editor);
+    }
+
+    class LineRangeTree {
+        class RangeNode{
+            int lineStartOffset;
+            int lineEndOffset;
+            List<RangeNode> childs;
+        }
+
+        public LineRangeTree(int lineStartOffset, int lineEndOffset) {
+
+        }
+    }
+
+    private void buildLineRangeTrees(Document document, int startLine, int endLine) {
+        lineRangeTrees = new LineRangeTree[endLine - startLine + 1];
+        for (int i = startLine; i <= endLine; i++) {
+            lineRangeTrees[i - startLine] = new LineRangeTree(document.getLineStartOffset(i), document.getLineEndOffset(i));
+        }
     }
 
     private void parseCodeInterval(Editor editor) {
@@ -92,6 +113,7 @@ public class DocumentStyleParser {
 
         spanStyle = new HtmlStyle();
         spanStyle.add(StyleType.DISPLAY, "inline-block");
+        spanStyle.add(StyleType.VERTICAL_ALIGN, "top");
         spanStyle.add(StyleType.POSITION, "relative");
         spanStyle.add(StyleType.MARGIN, "0");
         spanStyle.add(StyleType.PADDING, "0");
@@ -102,11 +124,16 @@ public class DocumentStyleParser {
         map.put(lineStyle, Sets.newHashSet(".line"));
         map.put(spanStyle, Sets.newHashSet(".span"));
         map.put(defaultStyle, Sets.newHashSet("div"));
-        styleLayerMap.put(1000, map);
+        styleLayerMap.put(100, map);
     }
 
     private void parseStyle(Editor editor) {
         EditorImpl editorImpl = (EditorImpl) editor;
+        RangeHighlighter[] allHighlighters1 = editor.getMarkupModel().getAllHighlighters();
+        CaretModel caretModel = editor.getCaretModel();
+        FoldingModel foldingModel = editor.getFoldingModel();
+        SoftWrapModel softWrapModel = editor.getSoftWrapModel();
+        ScrollingModel scrollingModel = editor.getScrollingModel();
         EditorFilteringMarkupModelEx filteredDocumentMarkupModel = (EditorFilteringMarkupModelEx) editorImpl.getFilteredDocumentMarkupModel();
         HighlighterIterator iterator = editorImpl.getHighlighter().createIterator(0);
         Map<HtmlStyle, Set<String>> styleLayer2000 = new HashMap<>();
@@ -117,6 +144,9 @@ public class DocumentStyleParser {
             if (textAttributes.getForegroundColor() != null) {
                 HtmlStyle htmlStyle = new HtmlStyle();
                 htmlStyle.add(StyleType.FOREGROUND, color2String(textAttributes.getForegroundColor()));
+                if (textAttributes.getFontType() == 2) {
+                    htmlStyle.add(StyleType.FONT_TYPE, "oblique");
+                }
                 if (!styleLayer2000.containsKey(htmlStyle)) {
                     styleLayer2000.put(htmlStyle, new HashSet<>());
                 }
@@ -136,8 +166,8 @@ public class DocumentStyleParser {
                         case WAVE_UNDERSCORE:
                             if (textAttributes.getEffectColor() != null) {
                                 htmlStyle.setBefore(true);
-                                htmlStyle.add(StyleType.CONTENT, "\"" + Strings.repeat("~", highlighter.getEndOffset() - highlighter.getStartOffset()) + "\"");
-                                htmlStyle.add(StyleType.SIZE, editor.getLineHeight() - ((EditorImpl) editor).getFontSize() + "px");
+                                htmlStyle.add(StyleType.CONTENT, "\"" + Strings.repeat("~", (highlighter.getEndOffset() - highlighter.getStartOffset()) * 2) + "\"");
+                                htmlStyle.add(StyleType.SIZE, editor.getLineHeight() - ((EditorImpl) editor).getFontSize() - 1 + "px");
                                 htmlStyle.add(StyleType.FOREGROUND, color2String(textAttributes.getEffectColor()));
                                 htmlStyle.add(StyleType.WIDTH, "100%");
                                 htmlStyle.add(StyleType.POSITION, "absolute");
@@ -196,19 +226,26 @@ public class DocumentStyleParser {
         if (startLine > endLine || startLine < 0 || endLine >= textLines.size()) {
             return "error line";
         }
+        Set<String> classSets = Sets.newHashSet("div", ".span", ".line");
+        for (List<Pair<TextRange, String>> line : textLines.subList(startLine, endLine + 1)) {
+            for (Pair<TextRange, String> text : line) {
+                classSets.add(".code_" + text.getFirst().getStartOffset());
+            }
+        }
         sb.append("<div>\n");
         sb.append("<style>\n");
         for (Integer layer : styleLayerMap.navigableKeySet()) {
             if (layer <= maxLayer) {
                 sb.append("/* layer:").append(layer).append("  */\n");
                 for (Map.Entry<HtmlStyle, Set<String>> entry : styleLayerMap.get(layer).entrySet()) {
-                    if (!entry.getKey().isEmpty()) {
+                    Sets.SetView<String> intersection = Sets.intersection(classSets, entry.getValue());
+                    if (!intersection.isEmpty() && !entry.getKey().isEmpty()) {
                         if (entry.getKey().isBefore()) {
-                            for (String s : entry.getValue()) {
+                            for (String s : intersection) {
                                 sb.append(String.format("%s:before{%s}\n", s, entry.getKey()));
                             }
                         } else {
-                            sb.append(String.format("%s{%s}\n", joiner.join(entry.getValue()), entry.getKey()));
+                            sb.append(String.format("%s{%s}\n", joiner.join(intersection), entry.getKey()));
                         }
                     }
                 }
@@ -218,7 +255,7 @@ public class DocumentStyleParser {
         sb.append("<div>\n");
         for (List<Pair<TextRange, String>> line : textLines.subList(startLine, endLine + 1)) {
             sb.append("<p class=\"line\">\n");
-            if(line.size()==0){
+            if (line.size() == 0) {
                 sb.append("<span class=\"span\"> </span>\n");
             }
             for (Pair<TextRange, String> text : line) {

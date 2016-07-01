@@ -10,6 +10,6 @@ public class CopyWithSyntaxStyleAction extends BaseAction {
 
     @Override
     String getContent(Editor editor, int startLine, int endLine) {
-        return new DocumentStyleParser(editor).getHtmlContent(startLine, endLine, 3000);
+        return new DocumentStyleParser(editor, startLine, endLine).getHtmlContent(startLine, endLine, 3000);
     }
 }
