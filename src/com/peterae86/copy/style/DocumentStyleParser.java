@@ -56,14 +56,19 @@ public class DocumentStyleParser {
             startPoints.add(start);
             TextRange textRange = new TextRange(start, end);
             String text = document.getText(textRange);
-            if (text.startsWith("\n")) {
+            int startIndex = 0;
+            while (startIndex < text.length() && text.charAt(startIndex) == '\n') {
                 textLine = new ArrayList<>();
                 textLines.add(textLine);
+                startIndex++;
             }
             textLine.add(Pair.create(textRange, text));
-            if (!text.startsWith("\n") && text.endsWith("\n")) {
-                textLine = new ArrayList<>();
-                textLines.add(textLine);
+            if (startIndex < text.length() && text.endsWith("\n")) {
+                int endIndex = text.length() - 1;
+                while (endIndex >= 0 && text.charAt(endIndex) == '\n') {
+                    textLine = new ArrayList<>();
+                    textLines.add(textLine);
+                }
             }
             iterator.advance();
         }
@@ -84,11 +89,13 @@ public class DocumentStyleParser {
         lineStyle.add(StyleType.FONT, Joiner.on(",").join(colorsScheme.getFontPreferences().getEffectiveFontFamilies()) + ",serif");
         lineStyle.add(StyleType.MARGIN, "0");
 
+
         spanStyle = new HtmlStyle();
         spanStyle.add(StyleType.DISPLAY, "inline-block");
         spanStyle.add(StyleType.POSITION, "relative");
+        spanStyle.add(StyleType.MARGIN, "0");
         spanStyle.add(StyleType.PADDING, "0");
-        lineStyle.add(StyleType.LINE_SPACING, String.valueOf(editor.getLineHeight()) + "px");
+        spanStyle.add(StyleType.LINE_SPACING, String.valueOf(editor.getLineHeight()) + "px");
         spanStyle.add(StyleType.HEIGHT, String.valueOf(editor.getLineHeight()) + "px");
 
         HashMap<HtmlStyle, Set<String>> map = Maps.newHashMapWithExpectedSize(2);
@@ -129,12 +136,12 @@ public class DocumentStyleParser {
                         case WAVE_UNDERSCORE:
                             if (textAttributes.getEffectColor() != null) {
                                 htmlStyle.setBefore(true);
-                                htmlStyle.add(StyleType.CONTENT, "\"" + Strings.repeat("~", (highlighter.getEndOffset() - highlighter.getStartOffset()) * 2) + "\"");
-                                htmlStyle.add(StyleType.SIZE, ((EditorImpl) editor).getFontSize() / 2.0 + "px");
+                                htmlStyle.add(StyleType.CONTENT, "\"" + Strings.repeat("~", highlighter.getEndOffset() - highlighter.getStartOffset()) + "\"");
+                                htmlStyle.add(StyleType.SIZE, editor.getLineHeight() - ((EditorImpl) editor).getFontSize() + "px");
                                 htmlStyle.add(StyleType.FOREGROUND, color2String(textAttributes.getEffectColor()));
                                 htmlStyle.add(StyleType.WIDTH, "100%");
                                 htmlStyle.add(StyleType.POSITION, "absolute");
-                                htmlStyle.add(StyleType.TOP, ((EditorImpl) editor).getFontSize() * 3 / 4.0 + "px");
+                                htmlStyle.add(StyleType.TOP, ((EditorImpl) editor).getFontSize() - 1 + "px");
                                 htmlStyle.add(StyleType.OVER_FLOW, "hidden");
                             }
                             break;
@@ -211,6 +218,9 @@ public class DocumentStyleParser {
         sb.append("<div>\n");
         for (List<Pair<TextRange, String>> line : textLines.subList(startLine, endLine + 1)) {
             sb.append("<p class=\"line\">\n");
+            if(line.size()==0){
+                sb.append("<span class=\"span\"> </span>\n");
+            }
             for (Pair<TextRange, String> text : line) {
                 sb.append(String.format("<span class=\"span code_%s\">", text.getFirst().getStartOffset()));
                 sb.append(escaper.escape(text.getSecond()).replace(" ", "&ensp;").replace("\n", ""));
