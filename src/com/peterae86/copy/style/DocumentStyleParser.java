@@ -74,15 +74,15 @@ public class DocumentStyleParser {
         EditorColorsScheme colorsScheme = editor.getColorsScheme();
         defaultStyle = new HtmlStyle();
         defaultStyle.add(StyleType.BACKGROUND, color2String(colorsScheme.getDefaultBackground()));
-        defaultStyle.add(StyleType.FOREGROUND, color2String(colorsScheme.getDefaultForeground()));
-        defaultStyle.add(StyleType.SIZE, colorsScheme.getEditorFontSize() + "px");
-        defaultStyle.add(StyleType.FONT, Joiner.on(",").join(colorsScheme.getFontPreferences().getEffectiveFontFamilies()) + ",serif");
-        defaultStyle.add(StyleType.MARGIN, "0");
-        defaultStyle.add(StyleType.PADDING, "0");
+
         lineStyle = new HtmlStyle();
         lineStyle.add(StyleType.LINE_SPACING, String.valueOf(colorsScheme.getLineSpacing()));
         lineStyle.add(StyleType.HEIGHT, String.valueOf(editor.getLineHeight()) + "px");
         lineStyle.add(StyleType.PADDING, "0");
+        lineStyle.add(StyleType.FOREGROUND, color2String(colorsScheme.getDefaultForeground()));
+        lineStyle.add(StyleType.SIZE, colorsScheme.getEditorFontSize() + "px");
+        lineStyle.add(StyleType.FONT, Joiner.on(",").join(colorsScheme.getFontPreferences().getEffectiveFontFamilies()) + ",serif");
+        lineStyle.add(StyleType.MARGIN, "0");
 
         spanStyle = new HtmlStyle();
         spanStyle.add(StyleType.DISPLAY, "inline-block");
@@ -182,10 +182,6 @@ public class DocumentStyleParser {
                 }
             }
         }
-    }
-
-    public static void main(String[] args) {
-        System.out.println(Arrays.binarySearch(new int[]{1, 3, 5, 7, 9}, 4));
     }
 
     public String getHtmlContent(int startLine, int endLine, int maxLayer) {
