@@ -81,11 +81,6 @@ public class DocumentStyleParser {
 
     private void parseStyle(Editor editor) {
         EditorImpl editorImpl = (EditorImpl) editor;
-        RangeHighlighter[] allHighlighters1 = editor.getMarkupModel().getAllHighlighters();
-        CaretModel caretModel = editor.getCaretModel();
-        FoldingModel foldingModel = editor.getFoldingModel();
-        SoftWrapModel softWrapModel = editor.getSoftWrapModel();
-        ScrollingModel scrollingModel = editor.getScrollingModel();
         EditorFilteringMarkupModelEx filteredDocumentMarkupModel = (EditorFilteringMarkupModelEx) editorImpl.getFilteredDocumentMarkupModel();
         HighlighterIterator iterator = editorImpl.getHighlighter().createIterator(0);
         Map<HtmlStyle, Set<TextRange>> styleLayer2000 = new HashMap<>();
@@ -178,9 +173,9 @@ public class DocumentStyleParser {
                 for (Map.Entry<HtmlStyle, Set<TextRange>> entry : styleLayerMap.get(layer).entrySet()) {
                     if (!entry.getKey().isEmpty()) {
                         if (entry.getKey().isBefore()) {
-                            sb.append(String.format("style_%s:before{%s}\n", styleIndex, entry.getKey()));
+                            sb.append(String.format(".style_%s:before{%s}\n", styleIndex, entry.getKey()));
                         } else {
-                            sb.append(String.format("style_%s{%s}\n", styleIndex, entry.getKey()));
+                            sb.append(String.format(".style_%s{%s}\n", styleIndex, entry.getKey()));
                         }
                         for (TextRange textRange : entry.getValue()) {
                             rangeTree.update(1L << styleIndex, textRange.getStartOffset(), textRange.getEndOffset());
@@ -200,7 +195,7 @@ public class DocumentStyleParser {
             for (Pair<TextRange, Long> range : ranges) {
                 String text = document.getText(range.first);
                 sb.append(String.format("<span class=\"span %s\">", getStyleClassByMark(range.second)));
-                sb.append(escaper.escape(text).replace(" ", "&ensp;").replace("\n", ""));
+                sb.append(escaper.escape(text).replace(" ", "&ensp;").replace("\t","&ensp;&ensp;&ensp;&ensp;").replace("\n", ""));
                 sb.append("</span>");
             }
             sb.append("</p>\n");
@@ -214,7 +209,7 @@ public class DocumentStyleParser {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 64; i++)
             if ((mark & (1L << i)) > 0) {
-                sb.append("style_").append(i).append(" ");
+                sb.append(" style_").append(i);
             }
         return sb.toString();
     }

@@ -63,7 +63,7 @@ public class RangeTree {
         long mark = points.get(0).second;
         for (Pair<Integer, Long> point : points) {
             if (point.second != mark) {
-                res.add(Pair.create(new TextRange(start, point.first - 1), mark));
+                res.add(Pair.create(new TextRange(start, point.first), mark));
                 start = point.first;
                 mark = point.second;
             }
