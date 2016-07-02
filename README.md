@@ -1,6 +1,6 @@
 # CopyWithStyle
 This plugin allows copying code from editor to clipboard with colors and style!
- 
+<html>
 <div>
 <style>
 div{background-color:#2b2b2b;}
@@ -55,3 +55,4 @@ div{background-color:#2b2b2b;}
 <span class="span "></span></p>
 </div>
 </div>
+</html>
