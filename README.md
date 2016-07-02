@@ -1,3 +1,3 @@
 # CopyWithStyle
-A idea plugin for exporting code high light style of editor
+This plugin allows copying code from editor to clipboard with colors and style!
  
