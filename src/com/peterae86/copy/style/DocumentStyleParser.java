@@ -16,6 +16,7 @@ import com.intellij.openapi.editor.markup.RangeHighlighter;
 import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.TextRange;
+import com.peterae86.copy.rangetree.RangeTree;
 
 import java.awt.Color;
 import java.util.*;
@@ -30,70 +31,27 @@ public class DocumentStyleParser {
     private HtmlStyle lineStyle;
     private HtmlStyle spanStyle;
 
-    TreeMap<Integer, Map<HtmlStyle, Set<String>>> styleLayerMap = new TreeMap<>();
+    TreeMap<Integer, Map<HtmlStyle, Set<TextRange>>> styleLayerMap = new TreeMap<>();
 
-    private Integer[] codeIntervalStartPoints;
-    private List<List<Pair<TextRange, String>>> textLines = new ArrayList<>();
-    private LineRangeTree[] lineRangeTrees;
+    private RangeTree rangeTree;
+    private Editor editor;
+    private int startLine;
+    private int endLine;
+    private Document document;
 
     public DocumentStyleParser(Editor editor, int startLine, int endLine) {
-        Document document = editor.getDocument();
+        this.editor = editor;
+        this.startLine = startLine;
+        this.endLine = endLine;
+        this.document = editor.getDocument();
         buildLineRangeTrees(document, startLine, endLine);
         parseDefaultStyle(editor);
-        parseCodeInterval(editor);
         parseStyle(editor);
     }
 
-    class LineRangeTree {
-        class RangeNode{
-            int lineStartOffset;
-            int lineEndOffset;
-            List<RangeNode> childs;
-        }
-
-        public LineRangeTree(int lineStartOffset, int lineEndOffset) {
-
-        }
-    }
 
     private void buildLineRangeTrees(Document document, int startLine, int endLine) {
-        lineRangeTrees = new LineRangeTree[endLine - startLine + 1];
-        for (int i = startLine; i <= endLine; i++) {
-            lineRangeTrees[i - startLine] = new LineRangeTree(document.getLineStartOffset(i), document.getLineEndOffset(i));
-        }
-    }
-
-    private void parseCodeInterval(Editor editor) {
-        EditorImpl editorImpl = (EditorImpl) editor;
-        DocumentImpl document = (DocumentImpl) editorImpl.getDocument();
-
-        HighlighterIterator iterator = editorImpl.getHighlighter().createIterator(0);
-        List<Pair<TextRange, String>> textLine = new ArrayList<>();
-        textLines.add(textLine);
-        List<Integer> startPoints = new ArrayList<>();
-        while (!iterator.atEnd()) {
-            int start = iterator.getStart();
-            int end = iterator.getEnd();
-            startPoints.add(start);
-            TextRange textRange = new TextRange(start, end);
-            String text = document.getText(textRange);
-            int startIndex = 0;
-            while (startIndex < text.length() && text.charAt(startIndex) == '\n') {
-                textLine = new ArrayList<>();
-                textLines.add(textLine);
-                startIndex++;
-            }
-            textLine.add(Pair.create(textRange, text));
-            if (startIndex < text.length() && text.endsWith("\n")) {
-                int endIndex = text.length() - 1;
-                while (endIndex >= 0 && text.charAt(endIndex) == '\n') {
-                    textLine = new ArrayList<>();
-                    textLines.add(textLine);
-                }
-            }
-            iterator.advance();
-        }
-        codeIntervalStartPoints = startPoints.stream().toArray(Integer[]::new);
+        rangeTree = new RangeTree(document.getLineStartOffset(startLine), document.getLineEndOffset(endLine));
     }
 
     private void parseDefaultStyle(Editor editor) {
@@ -119,12 +77,6 @@ public class DocumentStyleParser {
         spanStyle.add(StyleType.PADDING, "0");
         spanStyle.add(StyleType.LINE_SPACING, String.valueOf(editor.getLineHeight()) + "px");
         spanStyle.add(StyleType.HEIGHT, String.valueOf(editor.getLineHeight()) + "px");
-
-        HashMap<HtmlStyle, Set<String>> map = Maps.newHashMapWithExpectedSize(2);
-        map.put(lineStyle, Sets.newHashSet(".line"));
-        map.put(spanStyle, Sets.newHashSet(".span"));
-        map.put(defaultStyle, Sets.newHashSet("div"));
-        styleLayerMap.put(100, map);
     }
 
     private void parseStyle(Editor editor) {
@@ -136,11 +88,12 @@ public class DocumentStyleParser {
         ScrollingModel scrollingModel = editor.getScrollingModel();
         EditorFilteringMarkupModelEx filteredDocumentMarkupModel = (EditorFilteringMarkupModelEx) editorImpl.getFilteredDocumentMarkupModel();
         HighlighterIterator iterator = editorImpl.getHighlighter().createIterator(0);
-        Map<HtmlStyle, Set<String>> styleLayer2000 = new HashMap<>();
+        Map<HtmlStyle, Set<TextRange>> styleLayer2000 = new HashMap<>();
         styleLayerMap.put(2000, styleLayer2000);
         while (!iterator.atEnd()) {
             TextAttributes textAttributes = iterator.getTextAttributes();
             int start = iterator.getStart();
+            int end = iterator.getEnd();
             if (textAttributes.getForegroundColor() != null) {
                 HtmlStyle htmlStyle = new HtmlStyle();
                 htmlStyle.add(StyleType.FOREGROUND, color2String(textAttributes.getForegroundColor()));
@@ -150,7 +103,7 @@ public class DocumentStyleParser {
                 if (!styleLayer2000.containsKey(htmlStyle)) {
                     styleLayer2000.put(htmlStyle, new HashSet<>());
                 }
-                styleLayer2000.get(htmlStyle).add(".code_" + start);
+                styleLayer2000.get(htmlStyle).add(new TextRange(start, end));
             }
             iterator.advance();
         }
@@ -166,7 +119,7 @@ public class DocumentStyleParser {
                         case WAVE_UNDERSCORE:
                             if (textAttributes.getEffectColor() != null) {
                                 htmlStyle.setBefore(true);
-                                htmlStyle.add(StyleType.CONTENT, "\"" + Strings.repeat("~", (highlighter.getEndOffset() - highlighter.getStartOffset()) * 2) + "\"");
+                                htmlStyle.add(StyleType.CONTENT, "\"" + Strings.repeat("~", 100) + "\"");
                                 htmlStyle.add(StyleType.SIZE, editor.getLineHeight() - ((EditorImpl) editor).getFontSize() - 1 + "px");
                                 htmlStyle.add(StyleType.FOREGROUND, color2String(textAttributes.getEffectColor()));
                                 htmlStyle.add(StyleType.WIDTH, "100%");
@@ -196,7 +149,7 @@ public class DocumentStyleParser {
                 if (textAttributes.getBackgroundColor() != null) {
                     htmlStyle.add(StyleType.BACKGROUND, color2String(textAttributes.getBackgroundColor()));
                 }
-                Map<HtmlStyle, Set<String>> map;
+                Map<HtmlStyle, Set<TextRange>> map;
                 if (!styleLayerMap.containsKey(highlighter.getLayer())) {
                     map = new HashMap<>();
                     styleLayerMap.put(highlighter.getLayer(), map);
@@ -206,67 +159,63 @@ public class DocumentStyleParser {
                 if (!map.containsKey(htmlStyle)) {
                     map.put(htmlStyle, new HashSet<>());
                 }
-                int start = Arrays.binarySearch(codeIntervalStartPoints, highlighter.getStartOffset());
-                if (start < 0) {
-                    start = -start - 1;
-                }
-                int end = Arrays.binarySearch(codeIntervalStartPoints, highlighter.getEndOffset());
-                if (end < 0) {
-                    end = -end - 1;
-                }
-                for (int i = start; i < end; i++) {
-                    map.get(htmlStyle).add(".code_" + codeIntervalStartPoints[i]);
-                }
+                map.get(htmlStyle).add(new TextRange(highlighter.getStartOffset(), highlighter.getEndOffset()));
             }
         }
     }
 
-    public String getHtmlContent(int startLine, int endLine, int maxLayer) {
+    public String getHtmlContent(int maxLayer) {
         StringBuilder sb = new StringBuilder();
-        if (startLine > endLine || startLine < 0 || endLine >= textLines.size()) {
-            return "error line";
-        }
-        Set<String> classSets = Sets.newHashSet("div", ".span", ".line");
-        for (List<Pair<TextRange, String>> line : textLines.subList(startLine, endLine + 1)) {
-            for (Pair<TextRange, String> text : line) {
-                classSets.add(".code_" + text.getFirst().getStartOffset());
-            }
-        }
         sb.append("<div>\n");
         sb.append("<style>\n");
+        sb.append(String.format("div{%s}\n", defaultStyle));
+        sb.append(String.format(".line{%s}\n", lineStyle));
+        sb.append(String.format(".span{%s}\n", spanStyle));
+        int styleIndex = 0;
         for (Integer layer : styleLayerMap.navigableKeySet()) {
             if (layer <= maxLayer) {
                 sb.append("/* layer:").append(layer).append("  */\n");
-                for (Map.Entry<HtmlStyle, Set<String>> entry : styleLayerMap.get(layer).entrySet()) {
-                    Sets.SetView<String> intersection = Sets.intersection(classSets, entry.getValue());
-                    if (!intersection.isEmpty() && !entry.getKey().isEmpty()) {
+                for (Map.Entry<HtmlStyle, Set<TextRange>> entry : styleLayerMap.get(layer).entrySet()) {
+                    if (!entry.getKey().isEmpty()) {
                         if (entry.getKey().isBefore()) {
-                            for (String s : intersection) {
-                                sb.append(String.format("%s:before{%s}\n", s, entry.getKey()));
-                            }
+                            sb.append(String.format("style_%s:before{%s}\n", styleIndex, entry.getKey()));
                         } else {
-                            sb.append(String.format("%s{%s}\n", joiner.join(intersection), entry.getKey()));
+                            sb.append(String.format("style_%s{%s}\n", styleIndex, entry.getKey()));
                         }
+                        for (TextRange textRange : entry.getValue()) {
+                            rangeTree.update(1L << styleIndex, textRange.getStartOffset(), textRange.getEndOffset());
+                        }
+                        styleIndex++;
                     }
                 }
             }
         }
         sb.append("</style>\n");
         sb.append("<div>\n");
-        for (List<Pair<TextRange, String>> line : textLines.subList(startLine, endLine + 1)) {
+        for (int i = startLine; i <= endLine; i++) {
+            int lineStartOffset = document.getLineStartOffset(i);
+            int lineEndOffset = document.getLineEndOffset(i);
+            List<Pair<TextRange, Long>> ranges = rangeTree.queryRanges(lineStartOffset, lineEndOffset);
             sb.append("<p class=\"line\">\n");
-            if (line.size() == 0) {
-                sb.append("<span class=\"span\"> </span>\n");
-            }
-            for (Pair<TextRange, String> text : line) {
-                sb.append(String.format("<span class=\"span code_%s\">", text.getFirst().getStartOffset()));
-                sb.append(escaper.escape(text.getSecond()).replace(" ", "&ensp;").replace("\n", ""));
+            for (Pair<TextRange, Long> range : ranges) {
+                String text = document.getText(range.first);
+                sb.append(String.format("<span class=\"span %s\">", getStyleClassByMark(range.second)));
+                sb.append(escaper.escape(text).replace(" ", "&ensp;").replace("\n", ""));
                 sb.append("</span>");
             }
             sb.append("</p>\n");
         }
         sb.append("</div>\n");
         sb.append("</div>\n");
+        return sb.toString();
+    }
+
+    private String getStyleClassByMark(Long mark) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 64; i++)
+            if ((mark & (1L << i)) > 0) {
+                sb.append("style_").append(i).append(" ");
+            }
         return sb.toString();
     }
 

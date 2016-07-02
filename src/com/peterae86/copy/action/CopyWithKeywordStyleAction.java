@@ -7,6 +7,6 @@ public class CopyWithKeywordStyleAction extends BaseAction {
 
     @Override
     String getContent(Editor editor, int startLine, int endLine) {
-        return new DocumentStyleParser(editor, startLine, endLine).getHtmlContent(startLine, endLine, 2000);
+        return new DocumentStyleParser(editor, startLine, endLine).getHtmlContent(2000);
     }
 }
