@@ -1,7 +1,7 @@
-package com.peterae86.copy.action;
+package com.backkoms.copy.action;
 
 import com.intellij.openapi.editor.Editor;
-import com.peterae86.copy.style.DocumentStyleParser;
+import com.backkoms.copy.style.DocumentStyleParser;
 
 /**
  * Created by xiaorui.guo on 2016/6/28.

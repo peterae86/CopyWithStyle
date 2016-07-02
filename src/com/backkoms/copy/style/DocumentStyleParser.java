@@ -1,5 +1,6 @@
-package com.peterae86.copy.style;
+package com.backkoms.copy.style;
 
+import com.backkoms.copy.rangetree.RangeTree;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.escape.Escaper;
@@ -14,7 +15,6 @@ import com.intellij.openapi.editor.markup.RangeHighlighter;
 import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.TextRange;
-import com.peterae86.copy.rangetree.RangeTree;
 
 import java.awt.Color;
 import java.util.*;

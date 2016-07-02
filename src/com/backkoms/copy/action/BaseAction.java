@@ -1,4 +1,4 @@
-package com.peterae86.copy.action;
+package com.backkoms.copy.action;
 
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.editor.*;

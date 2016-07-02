@@ -1,6 +1,4 @@
-package com.peterae86.copy.style;
-
-import a.e.H;
+package com.backkoms.copy.style;
 
 import java.util.HashMap;
 import java.util.Map;

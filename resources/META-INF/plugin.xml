@@ -5,11 +5,11 @@
     <vendor email="775870132@qq.com" url="http://www.backkoms.com">..</vendor>
 
     <description><![CDATA[
-        This plugin allows copying code from editor to clipboard with colors and style.!
+        This plugin allows copying code from editor to clipboard with colors and style!
     ]]></description>
 
     <change-notes><![CDATA[
-      1.0 <br>
+      1.0 basic<br>
     ]]>
     </change-notes>
 
@@ -27,20 +27,20 @@
     <actions>
         <group id="MyExportGroup" text="Copy with style" popup="true">
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
-            <action id="com.peterae86.copy.ExportToHtmlAction"
-                    class="com.peterae86.copy.action.CopyWithSyntaxStyleAction"
+            <action id="CopyWithSyntaxStyleAction"
+                    class="com.backkoms.copy.action.CopyWithSyntaxStyleAction"
                     text="Copy with syntax style" description="test">
             </action>
-            <action id="com.peterae86.copy.ExportToHtmlAction2"
-                    class="com.peterae86.copy.action.CopyWithKeywordStyleAction"
+            <action id="CopyWithKeywordStyleAction"
+                    class="com.backkoms.copy.action.CopyWithKeywordStyleAction"
                     text="Copy with keyword style" description="test">
             </action>
-            <action id="com.peterae86.copy.ExportToHtmlAction3"
-                    class="com.peterae86.copy.action.CopyWithNoStyleAction"
+            <action id="CopyWithNoStyleAction"
+                    class="com.backkoms.copy.action.CopyWithNoStyleAction"
                     text="Copy with no style" description="test">
             </action>
-            <action id="com.peterae86.copy.ExportToHtmlAction4"
-                    class="com.peterae86.copy.action.CopyWithFullyStyleAction"
+            <action id="CopyWithFullyStyleAction"
+                    class="com.backkoms.copy.action.CopyWithFullyStyleAction"
                     text="Copy with full style" description="test">
             </action>
         </group>

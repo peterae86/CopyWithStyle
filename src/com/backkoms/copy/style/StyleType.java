@@ -1,4 +1,4 @@
-package com.peterae86.copy.style;
+package com.backkoms.copy.style;
 
 /**
  * Created by xiaorui.guo on 2016/6/23.
