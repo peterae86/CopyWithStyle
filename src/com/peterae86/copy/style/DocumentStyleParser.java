@@ -2,16 +2,14 @@ package com.peterae86.copy.style;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.escape.Escaper;
 import com.google.common.html.HtmlEscapers;
 import com.intellij.openapi.editor.*;
 import com.intellij.openapi.editor.colors.EditorColorsScheme;
 import com.intellij.openapi.editor.highlighter.HighlighterIterator;
-import com.intellij.openapi.editor.impl.DocumentImpl;
 import com.intellij.openapi.editor.impl.EditorFilteringMarkupModelEx;
 import com.intellij.openapi.editor.impl.EditorImpl;
+import com.intellij.openapi.editor.markup.AttributesFlyweight;
 import com.intellij.openapi.editor.markup.RangeHighlighter;
 import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.util.Pair;
@@ -96,6 +94,11 @@ public class DocumentStyleParser {
                 htmlStyle.add(StyleType.FOREGROUND, color2String(textAttributes.getForegroundColor()));
                 if (textAttributes.getFontType() == 2) {
                     htmlStyle.add(StyleType.FONT_TYPE, "oblique");
+                }else if(textAttributes.getFontType() == 1){
+                    htmlStyle.add(StyleType.FONT_WEIGHT,"700");
+                }else if(textAttributes.getFontType() == 3){
+                    htmlStyle.add(StyleType.FONT_TYPE, "oblique");
+                    htmlStyle.add(StyleType.FONT_WEIGHT,"700");
                 }
                 addStyle(100, textRange, htmlStyle);
             }
@@ -151,9 +154,16 @@ public class DocumentStyleParser {
                             break;
                     }
                 }
+                AttributesFlyweight flyweight = textAttributes.getFlyweight();
+
                 HtmlStyle htmlStyle = new HtmlStyle();
                 if (textAttributes.getFontType() == 2) {
                     htmlStyle.add(StyleType.FONT_TYPE, "oblique");
+                }else if(textAttributes.getFontType() == 1){
+                    htmlStyle.add(StyleType.FONT_WEIGHT,"700");
+                }else if(textAttributes.getFontType() == 3){
+                    htmlStyle.add(StyleType.FONT_TYPE, "oblique");
+                    htmlStyle.add(StyleType.FONT_WEIGHT,"700");
                 }
                 if (textAttributes.getForegroundColor() != null) {
                     htmlStyle.add(StyleType.FOREGROUND, color2String(textAttributes.getForegroundColor()));
