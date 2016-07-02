@@ -21,7 +21,7 @@ public enum StyleType {
     TOP("top"),
     OVER_FLOW("overflow"),
     FONT_TYPE("font-style"),
-    VERTICAL_ALIGN("vertical-align");
+    VERTICAL_ALIGN("vertical-align"), WHITE_SPACE("white-space");
 
     private String name;
 

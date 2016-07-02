@@ -76,6 +76,7 @@ public class RangeTree {
         if (l[i] > right || r[i] < left) {
             return;
         }
+        v[i] |= mark;
         if (l[i] == r[i] && l[i] >= left && r[i] <= right) {
             points.add(Pair.create(l[i], v[i] | mark));
             return;

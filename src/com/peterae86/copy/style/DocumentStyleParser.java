@@ -26,32 +26,28 @@ import java.util.*;
  */
 public class DocumentStyleParser {
     private static Escaper escaper = HtmlEscapers.htmlEscaper();
-    private static Joiner joiner = Joiner.on(",");
     private HtmlStyle defaultStyle;
     private HtmlStyle lineStyle;
     private HtmlStyle spanStyle;
+    private static String waveLine = Strings.repeat("~", 500);
+    private static String straightLine = Strings.repeat("_", 500);
 
-    TreeMap<Integer, Map<HtmlStyle, Set<TextRange>>> styleLayerMap = new TreeMap<>();
+    private TreeMap<Integer, Map<HtmlStyle, Set<TextRange>>> styleLayerMap = new TreeMap<>();
 
     private RangeTree rangeTree;
-    private Editor editor;
     private int startLine;
     private int endLine;
     private Document document;
+    private TextRange allTextRange;
 
     public DocumentStyleParser(Editor editor, int startLine, int endLine) {
-        this.editor = editor;
         this.startLine = startLine;
         this.endLine = endLine;
         this.document = editor.getDocument();
-        buildLineRangeTrees(document, startLine, endLine);
+        this.allTextRange = new TextRange(document.getLineStartOffset(startLine), document.getLineEndOffset(endLine));
+        this.rangeTree = new RangeTree(document.getLineStartOffset(startLine), document.getLineEndOffset(endLine));
         parseDefaultStyle(editor);
         parseStyle(editor);
-    }
-
-
-    private void buildLineRangeTrees(Document document, int startLine, int endLine) {
-        rangeTree = new RangeTree(document.getLineStartOffset(startLine), document.getLineEndOffset(endLine));
     }
 
     private void parseDefaultStyle(Editor editor) {
@@ -70,6 +66,7 @@ public class DocumentStyleParser {
 
 
         spanStyle = new HtmlStyle();
+        spanStyle.add(StyleType.WHITE_SPACE, "pre-wrap");
         spanStyle.add(StyleType.DISPLAY, "inline-block");
         spanStyle.add(StyleType.VERTICAL_ALIGN, "top");
         spanStyle.add(StyleType.POSITION, "relative");
@@ -77,28 +74,30 @@ public class DocumentStyleParser {
         spanStyle.add(StyleType.PADDING, "0");
         spanStyle.add(StyleType.LINE_SPACING, String.valueOf(editor.getLineHeight()) + "px");
         spanStyle.add(StyleType.HEIGHT, String.valueOf(editor.getLineHeight()) + "px");
+        spanStyle.add(StyleType.OVER_FLOW, "hidden");
+    }
+
+    public static void main(String[] args) {
+        System.out.println(new TextRange(1, 5).intersects(new TextRange(6, 10)));
     }
 
     private void parseStyle(Editor editor) {
         EditorImpl editorImpl = (EditorImpl) editor;
         EditorFilteringMarkupModelEx filteredDocumentMarkupModel = (EditorFilteringMarkupModelEx) editorImpl.getFilteredDocumentMarkupModel();
         HighlighterIterator iterator = editorImpl.getHighlighter().createIterator(0);
-        Map<HtmlStyle, Set<TextRange>> styleLayer2000 = new HashMap<>();
-        styleLayerMap.put(2000, styleLayer2000);
+
         while (!iterator.atEnd()) {
             TextAttributes textAttributes = iterator.getTextAttributes();
             int start = iterator.getStart();
             int end = iterator.getEnd();
-            if (textAttributes.getForegroundColor() != null) {
+            TextRange textRange = new TextRange(start, end - 1);
+            if (allTextRange.intersects(textRange) && textAttributes.getForegroundColor() != null) {
                 HtmlStyle htmlStyle = new HtmlStyle();
                 htmlStyle.add(StyleType.FOREGROUND, color2String(textAttributes.getForegroundColor()));
                 if (textAttributes.getFontType() == 2) {
                     htmlStyle.add(StyleType.FONT_TYPE, "oblique");
                 }
-                if (!styleLayer2000.containsKey(htmlStyle)) {
-                    styleLayer2000.put(htmlStyle, new HashSet<>());
-                }
-                styleLayer2000.get(htmlStyle).add(new TextRange(start, end));
+                addStyle(100, textRange, htmlStyle);
             }
             iterator.advance();
         }
@@ -107,34 +106,52 @@ public class DocumentStyleParser {
 
         for (RangeHighlighter highlighter : allHighlighters) {
             TextAttributes textAttributes = highlighter.getTextAttributes();
-            if (textAttributes != null) {
-                HtmlStyle htmlStyle = new HtmlStyle();
+            TextRange textRange = new TextRange(highlighter.getStartOffset(), highlighter.getEndOffset() - 1);
+            if (allTextRange.intersects(textRange) && textAttributes != null) {
                 if (textAttributes.getEffectType() != null) {
                     switch (textAttributes.getEffectType()) {
                         case WAVE_UNDERSCORE:
                             if (textAttributes.getEffectColor() != null) {
+                                HtmlStyle htmlStyle = new HtmlStyle();
                                 htmlStyle.setBefore(true);
-                                htmlStyle.add(StyleType.CONTENT, "\"" + Strings.repeat("~", 100) + "\"");
-                                htmlStyle.add(StyleType.SIZE, editor.getLineHeight() - ((EditorImpl) editor).getFontSize() - 1 + "px");
+                                htmlStyle.add(StyleType.CONTENT, "\"" + waveLine + "\"");
+                                htmlStyle.add(StyleType.SIZE, "5px");
                                 htmlStyle.add(StyleType.FOREGROUND, color2String(textAttributes.getEffectColor()));
                                 htmlStyle.add(StyleType.WIDTH, "100%");
                                 htmlStyle.add(StyleType.POSITION, "absolute");
-                                htmlStyle.add(StyleType.TOP, ((EditorImpl) editor).getFontSize() - 1 + "px");
-                                htmlStyle.add(StyleType.OVER_FLOW, "hidden");
+                                htmlStyle.add(StyleType.TOP, (editor.getLineHeight() / 2 + 3) * 100.0 / editor.getLineHeight() + "%");
+                                addStyle(highlighter.getLayer(), textRange, htmlStyle);
                             }
                             break;
                         case LINE_UNDERSCORE:
                             if (textAttributes.getEffectColor() != null) {
-                                htmlStyle.add(StyleType.LINE_UNDERSCORE, "1px solid " + color2String(textAttributes.getEffectColor()));
+                                HtmlStyle htmlStyle = new HtmlStyle();
+                                htmlStyle.setBefore(true);
+                                htmlStyle.add(StyleType.CONTENT, "\"" + straightLine + "\"");
+                                htmlStyle.add(StyleType.SIZE, "0.5em");
+                                htmlStyle.add(StyleType.FOREGROUND, color2String(textAttributes.getEffectColor()));
+                                htmlStyle.add(StyleType.WIDTH, "100%");
+                                htmlStyle.add(StyleType.POSITION, "absolute");
+                                htmlStyle.add(StyleType.TOP, "13%");
+                                addStyle(highlighter.getLayer(), textRange, htmlStyle);
                             }
                             break;
                         case STRIKEOUT:
                             if (textAttributes.getEffectColor() != null) {
-                                htmlStyle.add(StyleType.WAVE_UNDERSCORE, "line-through");
+                                HtmlStyle htmlStyle = new HtmlStyle();
+                                htmlStyle.setBefore(true);
+                                htmlStyle.add(StyleType.CONTENT, "\"" + straightLine + "\"");
+                                htmlStyle.add(StyleType.SIZE, "0.5em");
+                                htmlStyle.add(StyleType.FOREGROUND, color2String(textAttributes.getEffectColor()));
+                                htmlStyle.add(StyleType.WIDTH, "100%");
+                                htmlStyle.add(StyleType.POSITION, "absolute");
+                                htmlStyle.add(StyleType.TOP, "-8%");
+                                addStyle(highlighter.getLayer(), textRange, htmlStyle);
                             }
                             break;
                     }
                 }
+                HtmlStyle htmlStyle = new HtmlStyle();
                 if (textAttributes.getFontType() == 2) {
                     htmlStyle.add(StyleType.FONT_TYPE, "oblique");
                 }
@@ -144,19 +161,23 @@ public class DocumentStyleParser {
                 if (textAttributes.getBackgroundColor() != null) {
                     htmlStyle.add(StyleType.BACKGROUND, color2String(textAttributes.getBackgroundColor()));
                 }
-                Map<HtmlStyle, Set<TextRange>> map;
-                if (!styleLayerMap.containsKey(highlighter.getLayer())) {
-                    map = new HashMap<>();
-                    styleLayerMap.put(highlighter.getLayer(), map);
-                } else {
-                    map = styleLayerMap.get(highlighter.getLayer());
-                }
-                if (!map.containsKey(htmlStyle)) {
-                    map.put(htmlStyle, new HashSet<>());
-                }
-                map.get(htmlStyle).add(new TextRange(highlighter.getStartOffset(), highlighter.getEndOffset()));
+                addStyle(highlighter.getLayer(), textRange, htmlStyle);
             }
         }
+    }
+
+    private void addStyle(int layer, TextRange textRange, HtmlStyle htmlStyle) {
+        Map<HtmlStyle, Set<TextRange>> map;
+        if (!styleLayerMap.containsKey(layer)) {
+            map = new HashMap<>();
+            styleLayerMap.put(layer, map);
+        } else {
+            map = styleLayerMap.get(layer);
+        }
+        if (!map.containsKey(htmlStyle)) {
+            map.put(htmlStyle, new HashSet<>());
+        }
+        map.get(htmlStyle).add(textRange);
     }
 
     public String getHtmlContent(int maxLayer) {
@@ -195,7 +216,7 @@ public class DocumentStyleParser {
             for (Pair<TextRange, Long> range : ranges) {
                 String text = document.getText(range.first);
                 sb.append(String.format("<span class=\"span %s\">", getStyleClassByMark(range.second)));
-                sb.append(escaper.escape(text).replace(" ", "&ensp;").replace("\t","&ensp;&ensp;&ensp;&ensp;").replace("\n", ""));
+                sb.append(escaper.escape(text));
                 sb.append("</span>");
             }
             sb.append("</p>\n");
