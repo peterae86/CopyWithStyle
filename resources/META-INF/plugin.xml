@@ -6,6 +6,7 @@
 
     <description><![CDATA[
         This plugin allows copying code from editor to clipboard with colors and style!
+        Select lines you want copy, and then right click on the editor, you can see  "Copy with style" options on the first line
     ]]></description>
 
     <change-notes><![CDATA[
