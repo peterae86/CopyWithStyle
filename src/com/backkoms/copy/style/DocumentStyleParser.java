@@ -94,11 +94,11 @@ public class DocumentStyleParser {
                 htmlStyle.add(StyleType.FOREGROUND, color2String(textAttributes.getForegroundColor()));
                 if (textAttributes.getFontType() == 2) {
                     htmlStyle.add(StyleType.FONT_TYPE, "oblique");
-                }else if(textAttributes.getFontType() == 1){
-                    htmlStyle.add(StyleType.FONT_WEIGHT,"700");
-                }else if(textAttributes.getFontType() == 3){
+                } else if (textAttributes.getFontType() == 1) {
+                    htmlStyle.add(StyleType.FONT_WEIGHT, "700");
+                } else if (textAttributes.getFontType() == 3) {
                     htmlStyle.add(StyleType.FONT_TYPE, "oblique");
-                    htmlStyle.add(StyleType.FONT_WEIGHT,"700");
+                    htmlStyle.add(StyleType.FONT_WEIGHT, "700");
                 }
                 addStyle(100, textRange, htmlStyle);
             }
@@ -159,11 +159,11 @@ public class DocumentStyleParser {
                 HtmlStyle htmlStyle = new HtmlStyle();
                 if (textAttributes.getFontType() == 2) {
                     htmlStyle.add(StyleType.FONT_TYPE, "oblique");
-                }else if(textAttributes.getFontType() == 1){
-                    htmlStyle.add(StyleType.FONT_WEIGHT,"700");
-                }else if(textAttributes.getFontType() == 3){
+                } else if (textAttributes.getFontType() == 1) {
+                    htmlStyle.add(StyleType.FONT_WEIGHT, "700");
+                } else if (textAttributes.getFontType() == 3) {
                     htmlStyle.add(StyleType.FONT_TYPE, "oblique");
-                    htmlStyle.add(StyleType.FONT_WEIGHT,"700");
+                    htmlStyle.add(StyleType.FONT_WEIGHT, "700");
                 }
                 if (textAttributes.getForegroundColor() != null) {
                     htmlStyle.add(StyleType.FOREGROUND, color2String(textAttributes.getForegroundColor()));
@@ -192,11 +192,12 @@ public class DocumentStyleParser {
 
     public String getHtmlContent(int maxLayer) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<div>\n");
+        String divId = "code_block_" + System.currentTimeMillis();
+        sb.append("<div id=\"" + divId + "\">\n");
         sb.append("<style>\n");
-        sb.append(String.format("._style_default{%s}\n", defaultStyle));
-        sb.append(String.format("._style_line{%s}\n", lineStyle));
-        sb.append(String.format("._style_span{%s}\n", spanStyle));
+        sb.append(String.format("#%s ._style_default{%s}\n", divId, defaultStyle));
+        sb.append(String.format("#%s ._style_line{%s}\n", divId, lineStyle));
+        sb.append(String.format("#%s ._style_span{%s}\n", divId, spanStyle));
         int styleIndex = 0;
         for (Integer layer : styleLayerMap.navigableKeySet()) {
             if (layer <= maxLayer) {
@@ -204,9 +205,9 @@ public class DocumentStyleParser {
                 for (Map.Entry<HtmlStyle, Set<TextRange>> entry : styleLayerMap.get(layer).entrySet()) {
                     if (!entry.getKey().isEmpty()) {
                         if (entry.getKey().isBefore()) {
-                            sb.append(String.format("._style_%s:before{%s}\n", styleIndex, entry.getKey()));
+                            sb.append(String.format("#%s ._style_%s:before{%s}\n", divId, styleIndex, entry.getKey()));
                         } else {
-                            sb.append(String.format("._style_%s{%s}\n", styleIndex, entry.getKey()));
+                            sb.append(String.format("#%s ._style_%s{%s}\n", divId, styleIndex, entry.getKey()));
                         }
                         for (TextRange textRange : entry.getValue()) {
                             rangeTree.update(1L << styleIndex, textRange.getStartOffset(), textRange.getEndOffset());
