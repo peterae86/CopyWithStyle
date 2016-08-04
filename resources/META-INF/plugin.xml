@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.peterae86.copy</id>
     <name>CopyWithStyle</name>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <vendor email="peterae87@gmail.com" url="http://www.backkoms.com">..</vendor>
 
     <description><![CDATA[
@@ -10,8 +10,9 @@
     ]]></description>
 
     <change-notes><![CDATA[
-      1.0    basic<br>
+      1.0   basic<br>
       1.0.1 just modify the description, no need to update<br>
+      1.0.2 fix style bug<br>
     ]]>
     </change-notes>
 

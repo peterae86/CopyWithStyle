@@ -194,9 +194,9 @@ public class DocumentStyleParser {
         StringBuilder sb = new StringBuilder();
         sb.append("<div>\n");
         sb.append("<style>\n");
-        sb.append(String.format("div{%s}\n", defaultStyle));
-        sb.append(String.format(".line{%s}\n", lineStyle));
-        sb.append(String.format(".span{%s}\n", spanStyle));
+        sb.append(String.format("._style_default{%s}\n", defaultStyle));
+        sb.append(String.format("._style_line{%s}\n", lineStyle));
+        sb.append(String.format("._style_span{%s}\n", spanStyle));
         int styleIndex = 0;
         for (Integer layer : styleLayerMap.navigableKeySet()) {
             if (layer <= maxLayer) {
@@ -204,9 +204,9 @@ public class DocumentStyleParser {
                 for (Map.Entry<HtmlStyle, Set<TextRange>> entry : styleLayerMap.get(layer).entrySet()) {
                     if (!entry.getKey().isEmpty()) {
                         if (entry.getKey().isBefore()) {
-                            sb.append(String.format(".style_%s:before{%s}\n", styleIndex, entry.getKey()));
+                            sb.append(String.format("._style_%s:before{%s}\n", styleIndex, entry.getKey()));
                         } else {
-                            sb.append(String.format(".style_%s{%s}\n", styleIndex, entry.getKey()));
+                            sb.append(String.format("._style_%s{%s}\n", styleIndex, entry.getKey()));
                         }
                         for (TextRange textRange : entry.getValue()) {
                             rangeTree.update(1L << styleIndex, textRange.getStartOffset(), textRange.getEndOffset());
@@ -217,15 +217,15 @@ public class DocumentStyleParser {
             }
         }
         sb.append("</style>\n");
-        sb.append("<div>\n");
+        sb.append("<div class=\"_style_default\">\n");
         for (int i = startLine; i <= endLine; i++) {
             int lineStartOffset = document.getLineStartOffset(i);
             int lineEndOffset = document.getLineEndOffset(i);
             List<Pair<TextRange, Long>> ranges = rangeTree.queryRanges(lineStartOffset, lineEndOffset);
-            sb.append("<p class=\"line\">\n");
+            sb.append("<p class=\"_style_line\">\n");
             for (Pair<TextRange, Long> range : ranges) {
                 String text = document.getText(range.first);
-                sb.append(String.format("<span class=\"span %s\">", getStyleClassByMark(range.second)));
+                sb.append(String.format("<span class=\"_style_span %s\">", getStyleClassByMark(range.second)));
                 sb.append(escaper.escape(text));
                 sb.append("</span>");
             }
@@ -240,7 +240,7 @@ public class DocumentStyleParser {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 64; i++)
             if ((mark & (1L << i)) > 0) {
-                sb.append(" style_").append(i);
+                sb.append(" _style_").append(i);
             }
         return sb.toString();
     }
