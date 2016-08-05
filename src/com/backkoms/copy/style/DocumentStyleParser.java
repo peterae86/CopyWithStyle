@@ -61,7 +61,7 @@ public class DocumentStyleParser {
         lineStyle.add(StyleType.SIZE, colorsScheme.getEditorFontSize() + "px");
         lineStyle.add(StyleType.FONT, Joiner.on(",").join(colorsScheme.getFontPreferences().getEffectiveFontFamilies()) + ",serif");
         lineStyle.add(StyleType.MARGIN, "0");
-
+        lineStyle.add(StyleType.OVER_FLOW, "auto");
 
         spanStyle = new HtmlStyle();
         spanStyle.add(StyleType.WHITE_SPACE, "pre-wrap");
